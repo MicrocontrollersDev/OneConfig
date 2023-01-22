@@ -29,6 +29,7 @@ package cc.polyfrost.oneconfig.internal.mixin;
 import cc.polyfrost.oneconfig.events.EventManager;
 import cc.polyfrost.oneconfig.events.event.ChatReceiveEvent;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
+import net.minecraft.network.MessageType;
 import net.minecraft.network.packet.s2c.play.GameMessageS2CPacket;
 import net.minecraft.text.Text;
 import org.spongepowered.asm.mixin.Mixin;
@@ -53,7 +54,7 @@ public class NetHandlerPlayClientMixin {
 
     @Redirect(method = "onGameMessage", at = @At(value = "INVOKE", target = "Lnet/minecraft/network/packet/s2c/play/GameMessageS2CPacket;getMessage()Lnet/minecraft/text/Text;"))
     private Text onClientChatRedirect(GameMessageS2CPacket packet) {
-        if (!packet.isNonChat()) {
+        if (packet.getLocation() == MessageType.CHAT) {
             oneconfig$event = new ChatReceiveEvent(packet.getMessage());
             EventManager.INSTANCE.post(oneconfig$event);
             return oneconfig$event.message;

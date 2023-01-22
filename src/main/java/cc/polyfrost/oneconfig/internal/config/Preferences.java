@@ -269,7 +269,7 @@ public class Preferences extends InternalConfig {
             }
         });
         addDependency("guiClosingAnimation", "guiOpenAnimation");
-        addDependency("timeUntilReset", () -> openingBehavior == 3);
+        addDependency("timeUntilReset", "Smart Reset", () -> openingBehavior == 3);
         addDependency("pageAnimationDuration", "showPageAnimations");
         INSTANCE = this;
     }

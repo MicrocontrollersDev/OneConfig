@@ -23,18 +23,21 @@
  * to OneConfig, as published by Polyfrost. If not, see
  * <https://polyfrost.cc/legal/oneconfig/additional-terms>
  */
+//#if FABRIC==1
 
 package cc.polyfrost.oneconfig.internal.mixin;
 
 import cc.polyfrost.oneconfig.internal.hook.FramebufferHook;
-import com.mojang.blaze3d.platform.FramebufferInfo;
 import com.mojang.blaze3d.platform.GlStateManager;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gl.Framebuffer;
+import org.lwjgl.opengl.GL30;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.nio.IntBuffer;
 
@@ -57,20 +60,15 @@ public abstract class FramebufferMixin implements FramebufferHook {
     @Redirect(method = "initFbo", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/GlStateManager;texImage2D(IIIIIIIILjava/nio/IntBuffer;)V", ordinal = 0))
     private void stencilSupport(int target, int level, int internalFormat, int width, int height, int border, int format, int type, IntBuffer pixels) {
         if (stencilEnabled) {
-            GlStateManager.texImage2D(3553, 0, 36013, textureWidth, textureHeight, 0, 34041, 36269, null);
+            GlStateManager.texImage2D(3553, 0, GL30.GL_DEPTH32F_STENCIL8, textureWidth, textureHeight, 0, GL30.GL_DEPTH_STENCIL, GL30.GL_FLOAT_32_UNSIGNED_INT_24_8_REV, null);
         } else {
             GlStateManager.texImage2D(3553, 0, 6402, textureWidth, textureHeight, 0, 6402, 5126, null);
         }
     }
 
-    @Redirect(method = "initFbo", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/GlStateManager;framebufferTexture2D(IIIII)V", ordinal = 1))
-    private void stencilSupport(int target, int attachment, int textureTarget, int texture, int level) {
-        if (stencilEnabled) {
-            GlStateManager.framebufferTexture2D(FramebufferInfo.FRAME_BUFFER, 36096, 3553, depthAttachment, 0);
-            GlStateManager.framebufferTexture2D(FramebufferInfo.FRAME_BUFFER, 36128, 3553, depthAttachment, 0);
-        } else {
-            GlStateManager.framebufferTexture2D(FramebufferInfo.FRAME_BUFFER, FramebufferInfo.DEPTH_ATTACHMENT, 3553, depthAttachment, 0);
-        }
+    @Inject(method = "initFbo", at = @At(value = "INVOKE", target = "Lcom/mojang/blaze3d/platform/GlStateManager;framebufferTexture2D(IIIII)V", ordinal = 1, shift = At.Shift.AFTER))
+    private void stencilSupport(int i, int j, boolean bl, CallbackInfo ci) {
+        GlStateManager.framebufferTexture2D(36160, GL30.GL_STENCIL_ATTACHMENT, 3553, depthAttachment, 0);
     }
 
     @Override
@@ -86,3 +84,4 @@ public abstract class FramebufferMixin implements FramebufferHook {
         }
     }
 }
+//#endif

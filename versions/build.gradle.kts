@@ -19,7 +19,11 @@ plugins {
 }
 
 kotlin.jvmToolchain {
-    (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(8))
+    (this as JavaToolchainSpec).languageVersion.set(JavaLanguageVersion.of(when (platform.mcVersion) {
+        in 0..11605 -> 8
+        in 11606..11701 -> 16
+        else -> 17
+    }))
 }
 
 java {
@@ -60,6 +64,13 @@ loom {
         property("forge.logging.console.level", "debug")
         if (org.gradle.internal.os.OperatingSystem.current().isMacOsX) {
             property("fml.earlyprogresswindow", "false")
+        }
+    }
+    if (project.platform.mcVersion >= 11600) {
+        runConfigs {
+            "client" {
+                vmArgs.add("-XstartOnFirstThread")
+            }
         }
     }
     if (project.platform.isForge) {
